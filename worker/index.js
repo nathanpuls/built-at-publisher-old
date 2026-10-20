@@ -3,6 +3,7 @@ import { createAuthHandlers } from "./auth"
 import { createDomainSettingsHandlers } from "./domain-settings"
 import { createIconHandlers } from "./icons"
 import { createMediaHandlers } from "./media"
+import { applicationDomain, configuredEditorOrigin } from "./routing"
 
 const EMPTY_DOC_JSON = JSON.stringify({
   type: "doc",
@@ -10,7 +11,6 @@ const EMPTY_DOC_JSON = JSON.stringify({
 })
 const PUBLIC_ID_ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 const FAVICON_LINK = '<link rel="icon" type="image/svg+xml" href="/favicon-v2.svg">'
-const EDITOR_ORIGIN = "https://www.built.at"
 const LEGACY_PUBLIC_ORIGIN = "https://host.built.at"
 const USER_PAGES_ORIGIN = "https://built.at"
 const TRUSTED_HOSTNAME = "www.built.at"
@@ -208,7 +208,7 @@ const {
   logout,
   usernameAvailability,
 } = createAuthHandlers({
-  editorOrigin: EDITOR_ORIGIN,
+  editorOrigin: configuredEditorOrigin,
   json,
   makeId,
 })
@@ -1097,7 +1097,7 @@ async function publishShortcutPage(request, env) {
       ...(page.domain && page.domain !== DEFAULT_DOMAIN ? { domain: page.domain } : {}),
       id: page.id,
     })}`,
-    EDITOR_ORIGIN
+    configuredEditorOrigin(request, env)
   ).href
 
   return json({
@@ -1134,7 +1134,7 @@ async function openShortcutPage(request, env) {
     id: page.id,
   })
 
-  return redirectResponse(new URL(`/admin?${params}`, EDITOR_ORIGIN).href)
+  return redirectResponse(new URL(`/admin?${params}`, configuredEditorOrigin(request, env)).href)
 }
 
 async function getPage(id, env, user = null) {
@@ -2230,12 +2230,8 @@ export default {
       return httpsUpgrade
     }
 
-    if (url.hostname === "hand.built.at" || url.hostname === "voice.built.at") {
-      return new Response("Not found", { status: 404 })
-    }
-
     if (url.hostname === "admin.built.at") {
-      return redirectResponse(`${EDITOR_ORIGIN}/admin${url.search}`)
+      return redirectResponse(`${configuredEditorOrigin(request, env)}/admin${url.search}`)
     }
 
     const isTrustedAppPath =
@@ -2245,7 +2241,7 @@ export default {
       url.pathname === "/api/system/signup"
 
     if (url.hostname === "host.built.at" && isTrustedAppPath) {
-      return redirectResponse(`${EDITOR_ORIGIN}${url.pathname}${url.search}`)
+      return redirectResponse(`${configuredEditorOrigin(request, env)}${url.pathname}${url.search}`)
     }
 
     if (url.hostname === "host.built.at") {
@@ -2260,7 +2256,7 @@ export default {
       return redirectResponse(subdomainRedirect)
     }
 
-    const domain = requestDomain(request)
+    const domain = normalizeDomain(applicationDomain(request, env, DEFAULT_DOMAIN))
     const fallbackOrigin = domainFallbackOrigin(domain)
 
     if (
@@ -2318,11 +2314,11 @@ export default {
     if (url.pathname.startsWith("/admin") && (request.method === "GET" || request.method === "HEAD")) {
       const user = await currentUser(request, env)
       if (!user) {
-        return redirectResponse(new URL("/signup", EDITOR_ORIGIN).href)
+        return redirectResponse(new URL("/signup", configuredEditorOrigin(request, env)).href)
       }
 
       if (isRegularUser(user) && !user.username) {
-        return redirectResponse(new URL("/signup?choose=username", EDITOR_ORIGIN).href)
+        return redirectResponse(new URL("/signup?choose=username", configuredEditorOrigin(request, env)).href)
       }
       return renderAdmin(request, env)
     }

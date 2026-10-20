@@ -12,12 +12,8 @@
       "custom_domain": true
     },
     {
-      "pattern": "*.built.at/*",
+      "pattern": "hand.built.at/*",
       "zone_name": "built.at"
-    },
-    {
-      "pattern": "nathanpuls.com/*",
-      "zone_name": "nathanpuls.com"
     },
     {
       "pattern": "fullpsych.com/*",
@@ -33,7 +29,8 @@
     "run_worker_first": ["/*"]
   },
   "vars": {
-    "PUBLIC_MEDIA_BASE_URL": "https://media.nathanpuls.com"
+    "PUBLIC_MEDIA_BASE_URL": "https://media.nathanpuls.com",
+    "EDITOR_ORIGIN": "https://hand.built.at"
   },
   "triggers": {
     "crons": ["17 4 * * *"]

@@ -70,6 +70,11 @@ function publicUser(row) {
 }
 
 export function createAuthHandlers({ editorOrigin, json, makeId }) {
+  function appOrigin(request, env) {
+    const configured = typeof editorOrigin === "function" ? editorOrigin(request, env) : editorOrigin
+    return configured || new URL(request.url).origin
+  }
+
   async function currentUser(request, env) {
     if (!env.DB) return null
     const token = cookieValue(request, SESSION_COOKIE)
@@ -106,7 +111,7 @@ export function createAuthHandlers({ editorOrigin, json, makeId }) {
 
   async function beginGoogleAuth(request, env) {
     if (!authConfigured(env)) {
-      return redirect(new URL("/signup?error=google-not-configured", editorOrigin).href)
+      return redirect(new URL("/signup?error=google-not-configured", appOrigin(request, env)).href)
     }
 
     const state = randomToken()
@@ -141,7 +146,7 @@ export function createAuthHandlers({ editorOrigin, json, makeId }) {
     const verifier = cookieValue(request, OAUTH_VERIFIER_COOKIE)
 
     if (!code || !state || !expectedState || state !== expectedState || !verifier) {
-      return redirect(new URL("/signup?error=invalid-oauth-state", editorOrigin).href)
+      return redirect(new URL("/signup?error=invalid-oauth-state", appOrigin(request, env)).href)
     }
 
     const redirectUri = env.GOOGLE_REDIRECT_URI || `${url.origin}/api/auth/callback`
@@ -160,7 +165,7 @@ export function createAuthHandlers({ editorOrigin, json, makeId }) {
     const tokens = await tokenResponse.json()
 
     if (!tokenResponse.ok || !tokens.access_token) {
-      return redirect(new URL("/signup?error=google-token", editorOrigin).href)
+      return redirect(new URL("/signup?error=google-token", appOrigin(request, env)).href)
     }
 
     const profileResponse = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
@@ -169,7 +174,7 @@ export function createAuthHandlers({ editorOrigin, json, makeId }) {
     const profile = await profileResponse.json()
 
     if (!profileResponse.ok || !profile.sub || !profile.email || profile.email_verified === false) {
-      return redirect(new URL("/signup?error=google-profile", editorOrigin).href)
+      return redirect(new URL("/signup?error=google-profile", appOrigin(request, env)).href)
     }
 
     const now = new Date().toISOString()
@@ -202,7 +207,7 @@ export function createAuthHandlers({ editorOrigin, json, makeId }) {
     ).bind(sessionHash, user.id, expiresAt, now, now).run()
 
     const headers = new Headers({
-      location: new URL(user.username || user.role === "owner" ? "/admin" : "/signup?choose=username", editorOrigin).href,
+      location: new URL(user.username || user.role === "owner" ? "/admin" : "/signup?choose=username", appOrigin(request, env)).href,
       "cache-control": "no-store",
     })
     headers.append("set-cookie", cookie(SESSION_COOKIE, sessionToken, {

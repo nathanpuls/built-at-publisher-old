@@ -12,6 +12,7 @@
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
     "lint": "eslint .",
+    "test": "node --test test/*.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
