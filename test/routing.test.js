@@ -32,6 +32,7 @@ test("Cloudflare routes only the Hand application to this Worker", () => {
   const config = JSON.parse(readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"))
   const patterns = config.routes.map((route) => route.pattern)
   assert.ok(patterns.includes("hand.built.at/*"))
+  assert.ok(patterns.includes("admin.built.at/*"))
   assert.ok(!patterns.includes("*.built.at/*"))
   assert.ok(!patterns.includes("nathanpuls.com/*"))
 })
