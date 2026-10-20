@@ -8,10 +8,6 @@
       "zone_name": "built.at"
     },
     {
-      "pattern": "www.built.at/*",
-      "zone_name": "built.at"
-    },
-    {
       "pattern": "admin.built.at",
       "custom_domain": true
     },
