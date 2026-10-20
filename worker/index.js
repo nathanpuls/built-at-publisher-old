@@ -3,7 +3,7 @@ import { createAuthHandlers } from "./auth"
 import { createDomainSettingsHandlers } from "./domain-settings"
 import { createIconHandlers } from "./icons"
 import { createMediaHandlers } from "./media"
-import { applicationDomain, configuredEditorOrigin } from "./routing"
+import { applicationDomain, configuredEditorOrigin, isApplicationHostname } from "./routing"
 
 const EMPTY_DOC_JSON = JSON.stringify({
   type: "doc",
@@ -2250,7 +2250,9 @@ export default {
       request = new Request(url, request)
     }
 
-    const subdomainRedirect = mappedSubdomainRedirect(url.hostname, url.pathname, url.search)
+    const subdomainRedirect = isApplicationHostname(request, env)
+      ? ""
+      : mappedSubdomainRedirect(url.hostname, url.pathname, url.search)
 
     if (subdomainRedirect) {
       return redirectResponse(subdomainRedirect)

@@ -7,3 +7,7 @@ export function applicationDomain(request, env = {}, defaultDomain = "built.at")
   const editorHostname = new URL(configuredEditorOrigin(request, env)).hostname.toLowerCase()
   return requestHostname === editorHostname ? defaultDomain : requestHostname.replace(/^www\./, "")
 }
+
+export function isApplicationHostname(request, env = {}) {
+  return new URL(request.url).hostname.toLowerCase() === new URL(configuredEditorOrigin(request, env)).hostname.toLowerCase()
+}
